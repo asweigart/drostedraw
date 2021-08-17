@@ -17,7 +17,7 @@ with io.open("README.md", encoding="utf-8") as fileObj:
     long_description = fileObj.read()
 
 setup(
-    name="Droste Draw",
+    name="DrosteDraw",
     version=version,
     url="https://github.com/asweigart/drostedraw",
     author="Al Sweigart",
