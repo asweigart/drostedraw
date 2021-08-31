@@ -6,39 +6,65 @@ A Python module for making recursive drawings (aka Droste effect) with the built
 __version__ = '0.1.0'
 
 
-import turtle, random, time
+import turtle, math
 
-MAX_ITERATION = 8
-
-turtle.tracer(10000, 0) # Increase the first argument to speed up the drawing.
-turtle.hideturtle()
-
+MAX_FUNCTION_CALLS = 10000
+MAX_ITERATION = 400
+MIN_SIZE = 1
 
 # NOTE: In general, don't use absolute coordinate functions (like turtle.goto(), turtle.xcor(), turtle.ycor(),
-# turtle.setheading()) in your draw functions.
-def drawSquare(size, iteration):
-    size = int(size)  # Reduce rounding errors by converting this to an int.
+# turtle.setheading()) in your draw functions because they might not work when the heading angle is not 0.
 
-    # Remember the original starting coordinates:
-    origX = turtle.xcor()
-    origY = turtle.ycor()
+def drawSquare(size, extraData=None):
+    size = int(size)  # Reduce rounding errors by converting this to an int.
 
     # Move to the top-right corner before drawing:
     turtle.penup()
-    #turtle.goto(turtle.xcor() - (size // 2), turtle.ycor() + (size // 2))
     turtle.forward(size // 2)
     turtle.left(90)
     turtle.forward(size // 2)
     turtle.left(180)
     turtle.pendown()
 
-    # Alternate between two colors:
-    if iteration % 2 == 0:
-        turtle.fillcolor(0.58, 0.77, 0.02)  # A nice green color.
-        turtle.pencolor(0.58, 0.77, 0.02)  # Comment this line out for black outline.
-    else:
-        turtle.fillcolor(0.98, 0.91, 0.0)  # A nice yellow color.
-        turtle.pencolor(0.98, 0.91, 0.0)  # Comment this line out for black outline.
+    # Draw a square:
+    for i in range(4):
+        turtle.forward(size)
+        turtle.right(90)
+
+
+def drawTriangleOutline(size, extraData=None):
+    # Move the turtle into position at the top of the equilateral triangle:
+    height = (size * math.sqrt(3)) / 2
+    turtle.penup()
+    turtle.left(90)
+    turtle.forward(height * (2/3))
+    turtle.right(150)
+    turtle.pendown()
+
+    # Draw the triangle:
+    turtle.forward(size)
+    turtle.right(120)
+    turtle.forward(size)
+    turtle.right(120)
+    turtle.forward(size)
+    turtle.right(120)
+
+
+
+def drawFilledSquare(size, extraData=None):
+    # Move to the top-right corner before drawing:
+    turtle.penup()
+    turtle.forward(size // 2)
+    turtle.left(90)
+    turtle.forward(size // 2)
+    turtle.left(180)
+    turtle.pendown()
+
+    # The extra data is a tuple of (fillcolor, pencolor) values:
+    if extraData is not None:
+        iteration = extraData['_iteration'] - 1  # -1 because iteration starts at 1, not 0.
+        turtle.fillcolor(extraData['colors'][iteration % len(extraData['colors'])])
+        turtle.pencolor(extraData['colors'][iteration % len(extraData['colors'])])
 
     # Draw a square:
     turtle.begin_fill()
@@ -47,32 +73,24 @@ def drawSquare(size, iteration):
         turtle.right(90)
     turtle.end_fill()
 
-    # Move back to the starting coordinates:
-    turtle.penup()
-    turtle.goto(origX, origY)
-    turtle.pendown()
 
-    #time.sleep(0.01)
-    #turtle.update()
+def drosteDraw(drawFunction, size, changes, extraData=None):
+    # Provide default values for extraData if they weren't provided by the caller:
+    if extraData is None:
+        extraData = {}
+    if '_iteration' not in extraData:
+        extraData['_iteration'] = 1
+    if 'maxIteration' not in extraData:
+        extraData['maxIteration'] = MAX_ITERATION
+    if 'maxFunctionCalls' not in extraData:
+        extraData['maxFunctionCalls'] = MAX_FUNCTION_CALLS
+    if 'minSize' not in extraData:
+        extraData['minSize'] = MIN_SIZE
 
-def drosteDraw(drawFunction, size, changeSize, changeX, changeY, changeAngle, maxIteration=MAX_ITERATION, iteration=0):
-    #print('drosteDraw(): size =', size, 'and iteration =', iteration, ')')
-
-    if iteration > maxIteration or size < 1:
+    if extraData['_iteration'] > extraData['maxIteration'] or \
+       len(changes) ** extraData['_iteration'] > extraData['maxFunctionCalls'] or \
+       size < extraData['minSize']:
         return  # BASE CASE
-
-    # Convert the change arguments to lists if they aren't in lists already:
-    if not isinstance(changeSize, list):
-        changeSize = [changeSize]
-    if not isinstance(changeX, list):
-        changeX = [changeX]
-    if not isinstance(changeY, list):
-        changeY = [changeY]
-    if not isinstance(changeAngle, list):
-        changeAngle = [changeAngle]
-    assert len(changeSize) == len(changeX) == len(changeY) == len(changeAngle)
-    for i in range(len(changeSize)):
-        assert changeSize[i] >= 0.0
 
     # Remember the original starting coordinates and heading.
     origX = turtle.xcor()
@@ -80,41 +98,70 @@ def drosteDraw(drawFunction, size, changeSize, changeX, changeY, changeAngle, ma
     origHeading = turtle.heading()
 
     turtle.pendown()
-    drawFunction(size, iteration)
+    drawFunction(size, extraData)
     turtle.penup()
 
     # RECURSIVE CASE
-    for i in range(len(changeSize)):
-        turtle.goto(origX + (size * changeX[i]), origY + (size * changeY[i]))
-        turtle.setheading(origHeading + changeAngle[i])
-        drosteDraw(drawFunction, size * changeSize[i], changeSize, changeX, changeY, changeAngle, maxIteration, iteration + 1)
+    for i in range(len(changes)):
+        # Provide default values for the dictionaries in `changes`:
+        if 'x' not in changes[i]:
+            changes[i]['x'] = 0
+        if 'y' not in changes[i]:
+            changes[i]['y'] = 0
+        if 'size' not in changes[i]:
+            changes[i]['size'] = 1.0
+        if 'angle' not in changes[i]:
+            changes[i]['angle'] = 0
 
-
-def randomDrosteDraw(drawFunction):
-    startSize = random.randint(50, 100)
-    changeSize = random.randint(-50, 50)
-    changeX = random.randint(-100, 100)
-    changeY = random.randint(-100, 100)
-    changeAngle = random.randint(-30, 30)
-    print('Called drosteDraw(FUNC,', startSize, ',', changeSize, ',', changeX, ',', changeY, ',', changeAngle, ')')
-
-    drosteDraw(drawFunction, startSize, changeSize, changeX, changeY, changeAngle)
+        #turtle.goto(origX + (size * changes[i]['x']), origY + (size * changes[i]['y']))
+        turtle.goto(origX, origY)
+        turtle.setheading(origHeading + changes[i]['angle'])
+        turtle.forward(size * changes[i]['x'])
+        turtle.left(90)
+        turtle.forward(size * changes[i]['y'])
+        turtle.right(90)
+        extraData['_iteration'] += 1
+        drosteDraw(drawFunction, int(size * changes[i]['size']), changes, extraData)
+        extraData['_iteration'] -= 1
     turtle.update()
 
-#turtle.penup()
-#turtle.goto(0,-200)
+_DEMO_NUM = 0
+def demo(x=None, y=None):
+    global _DEMO_NUM
+    turtle.reset()
+    turtle.tracer(20000, 0) # Increase the first argument to speed up the drawing.
+    turtle.hideturtle()
 
-#drosteDraw(drawSquare, 600 , [0.8] , [0] , [0] , [-10])
-#drosteDraw(drawSquare, 600 , [0.8, 0.5] , [0,0] , [0,0] , [-10, 15])
+    if _DEMO_NUM == 0:
+        drosteDraw(drawSquare, 350, [{'size': 0.8}])
+    elif _DEMO_NUM == 1:
+        drosteDraw(drawSquare, 350, [{'size': 0.8, 'x': 0.20}])
+    elif _DEMO_NUM == 2:
+        drosteDraw(drawSquare, 350, [{'size': 0.5, 'x': -0.5, 'y': 0.5},
+                                     {'size': 0.5, 'x': 0.5, 'y': 0.5},
+                                     {'size': 0.5, 'x': -0.5, 'y': -0.5},
+                                     {'size': 0.5, 'x': 0.5, 'y': -0.5}])
 
-#while True:
-#    turtle.reset()
-#    randomDrosteDraw(drawSquare)
-#    time.sleep(1)
+
+        turtle.exitonclick()
+
+    _DEMO_NUM += 1
+
 
 def main():
-    drosteDraw(drawSquare, 350, [0.5, 0.5, 0.5, 0.5], [-0.5, 0.5, -0.5, 0.5], [0.5, 0.5, -0.5, -0.5], [0,0,0,0], 6) # Try this with both colors as black.
-    turtle.exitonclick()
+
+
+    turtle.onscreenclick(demo)
+    demo()
+    turtle.mainloop()
+    #drosteDraw(drawTriangleOutline, 350, [{'size': 0.8, 'y': 0.20, 'angle': 10}])
+    #drosteDraw(drawFilledSquare, 350, [{'size': 0.8, 'y': 0.20, 'angle': 10}], extraData={'colors': ['red', 'black'], 'maxIteration': 20})
+
+    #drosteDraw(drawSquare, 350, [0.5, 0.5, 0.5, 0.5], [-0.5, 0.5, -0.5, 0.5], [0.5, 0.5, -0.5, -0.5], [0,0,0,0], 6,
+    #    extraData=(((0.58, 0.77, 0.02), (0.58, 0.77, 0.02)), ((0.98, 0.91, 0.0), (0.98, 0.91, 0.0))))  # TODO Try this with both colors as black.
+    #drosteDraw(drawFilledSquare, 350, [0.5, 0.5, 0.5, 0.5], [-0.5, 0.5, -0.5, 0.5], [0.5, 0.5, -0.5, -0.5], [45, 45, 45, 45], 4)
+    #drosteDraw(drawFilledSquare, 350, [0.5, 0.5, 0.5, 0.5], [-0.5, 0.5, -0.5, 0.5], [0.5, 0.5, -0.5, -0.5], [30, 30, 30, 30], 5)
+
 
 
 if __name__ == '__main__':
