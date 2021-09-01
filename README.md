@@ -8,15 +8,15 @@ at the code in the `main()` function of the module.
 
 Some drawings made with Droste Draw:
 
-[Demo 1 image](demo1.png)
+![Demo 1 image](demo1.png)
 
-[Demo 2 image](demo2.png)
+![Demo 2 image](demo2.png)
 
-[Demo 3 image](demo3.png)
+![Demo 3 image](demo3.png)
 
-[Demo 4 image](demo4.png)
+![Demo 4 image](demo4.png)
 
-[Demo 5 image](demo5.png)
+![Demo 5 image](demo5.png)
 
 
 Installation
