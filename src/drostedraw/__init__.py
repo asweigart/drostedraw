@@ -16,8 +16,6 @@ MIN_SIZE = 1
 # turtle.setheading()) in your draw functions because they might not work when the heading angle is not 0.
 
 def drawSquare(size, extraData=None):
-    size = int(size)  # Reduce rounding errors by converting this to an int.
-
     # Move to the top-right corner before drawing:
     turtle.penup()
     turtle.forward(size // 2)
@@ -48,7 +46,6 @@ def drawTriangle(size, extraData=None):
     turtle.right(120)
     turtle.forward(size)
     turtle.right(120)
-
 
 
 def drawFilledSquare(size, extraData=None):
