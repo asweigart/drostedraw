@@ -3,7 +3,7 @@ By Al Sweigart al@inventwithpython.com
 
 A Python module for making recursive drawings (aka Droste effect) with the built-in turtle module."""
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 
 import turtle, math
@@ -96,6 +96,8 @@ def drawFilledDiamond(size, extraData=None):
 
 
 def drosteDraw(drawFunction, size, changes, extraData=None):
+    # NOTE: The heading of the turtle is considered to be the rightward direction.
+
     # Provide default values for extraData if they weren't provided by the caller:
     if extraData is None:
         extraData = {}
@@ -157,6 +159,7 @@ def demo(x=None, y=None):
     turtle.tracer(20000, 0) # Increase the first argument to speed up the drawing.
     turtle.hideturtle()
 
+
     if _DEMO_NUM == 0:
         # Recursively draw smaller squares in the center:
         drosteDraw(drawSquare, 350, [{'size': 0.8}])
@@ -176,59 +179,57 @@ def demo(x=None, y=None):
         # Recursively draw smaller triangle that go up at an angle:
         drosteDraw(drawTriangle, 350, [{'size': 0.8, 'y': 0.20, 'angle': 15}])
     elif _DEMO_NUM == 6:
+        # Recursively draw a spirograph of squares:
+        drosteDraw(drawSquare, 150, [{'angle': 10, 'x': 0.1}])
+    elif _DEMO_NUM == 7:
         # Recursively draw a smaller square in each of the four corners of the parent square:
         drosteDraw(drawSquare, 350, [{'size': 0.5, 'x': -0.5, 'y': 0.5},
                                      {'size': 0.5, 'x': 0.5, 'y': 0.5},
                                      {'size': 0.5, 'x': -0.5, 'y': -0.5},
                                      {'size': 0.5, 'x': 0.5, 'y': -0.5}])
-    elif _DEMO_NUM == 7:
+    elif _DEMO_NUM == 8:
         # Recursively draw smaller filled squares in the center, alternating red and black:
         drosteDraw(drawFilledSquare, 350, [{'size': 0.8}], {'colors': ['red', 'black']})
-    elif _DEMO_NUM == 8:
+    elif _DEMO_NUM == 9:
         # Recursively draw a smaller filled square in each of the four corners of the parent square with red and black:
         drosteDraw(drawFilledSquare, 350, [{'size': 0.5, 'x': -0.5, 'y': 0.5},
                                            {'size': 0.5, 'x': 0.5, 'y': 0.5},
                                            {'size': 0.5, 'x': -0.5, 'y': -0.5},
                                            {'size': 0.5, 'x': 0.5, 'y': -0.5}], {'colors': ['red', 'black']})
-    elif _DEMO_NUM == 9:
+    elif _DEMO_NUM == 10:
         # Recursively draw a smaller filled square in each of the four corners of the parent square with white and black:
         drosteDraw(drawFilledSquare, 350, [{'size': 0.5, 'x': -0.5, 'y': 0.5},
                                            {'size': 0.5, 'x': 0.5, 'y': 0.5},
                                            {'size': 0.5, 'x': -0.5, 'y': -0.5},
                                            {'size': 0.5, 'x': 0.5, 'y': -0.5}], {'colors': ['white', 'black']})
-    elif _DEMO_NUM == 10:
+    elif _DEMO_NUM == 11:
         # Recursively draw a smaller filled square in each of the four corners of the parent square:
         drosteDraw(drawFilledDiamond, 350, [{'size': 0.5, 'x': -0.45, 'y': 0.45},
                                             {'size': 0.5, 'x': 0.45, 'y': 0.45},
                                             {'size': 0.5, 'x': -0.45, 'y': -0.45},
                                             {'size': 0.5, 'x': 0.45, 'y': -0.45}], {'colors': ['green', 'yellow']})
-    elif _DEMO_NUM == 11:
+    elif _DEMO_NUM == 12:
         # Draw the sierpinsky triangle:
         drosteDraw(drawTriangle, 600, [{'size': 0.5, 'x': 0, 'y': math.sqrt(3) / 6, 'angle': 0},
                                        {'size': 0.5, 'x': 0, 'y': math.sqrt(3) / 6, 'angle': 120},
                                        {'size': 0.5, 'x': 0, 'y': math.sqrt(3) / 6, 'angle': 240}])
-
-
-
+    elif _DEMO_NUM == 13:
+        # Draw a recursive "glider" shape from Conway's Game of Life:
+        drosteDraw(drawSquare, 600, [{'size': 0.333, 'x': 0, 'y': 0.333},
+                                     {'size': 0.333, 'x': 0.333, 'y': 0},
+                                     {'size': 0.333, 'x': 0.333, 'y': -0.333},
+                                     {'size': 0.333, 'x': 0, 'y': -0.333},
+                                     {'size': 0.333, 'x': -0.333, 'y': -0.333}])
 
         turtle.exitonclick()
     _DEMO_NUM += 1
 
 
 def main():
-
-
+    # Start the demo:
     turtle.onscreenclick(demo)
     demo()
     turtle.mainloop()
-    #
-    #drosteDraw(drawFilledSquare, 350, [{'size': 0.8, 'y': 0.20, 'angle': 10}], extraData={'colors': ['red', 'black'], 'maxIteration': 20})
-
-    #drosteDraw(drawSquare, 350, [0.5, 0.5, 0.5, 0.5], [-0.5, 0.5, -0.5, 0.5], [0.5, 0.5, -0.5, -0.5], [0,0,0,0], 6,
-    #    extraData=(((0.58, 0.77, 0.02), (0.58, 0.77, 0.02)), ((0.98, 0.91, 0.0), (0.98, 0.91, 0.0))))  # TODO Try this with both colors as black.
-    #drosteDraw(drawFilledSquare, 350, [0.5, 0.5, 0.5, 0.5], [-0.5, 0.5, -0.5, 0.5], [0.5, 0.5, -0.5, -0.5], [45, 45, 45, 45], 4)
-    #drosteDraw(drawFilledSquare, 350, [0.5, 0.5, 0.5, 0.5], [-0.5, 0.5, -0.5, 0.5], [0.5, 0.5, -0.5, -0.5], [30, 30, 30, 30], 5)
-
 
 
 if __name__ == '__main__':
