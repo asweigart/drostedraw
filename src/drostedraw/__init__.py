@@ -8,53 +8,63 @@ __version__ = '0.2.1'
 
 import turtle, math
 
-MAX_FUNCTION_CALLS = 10000
-MAX_ITERATION = 400
-MIN_SIZE = 1
+MAX_FUNCTION_CALLS = 10000  # Stop recursion after this many function calls.
+MAX_ITERATION = 400  # Stop recursion after this iteration.
+MIN_SIZE = 1  # Stop recursion if size is less than this.
 
 # NOTE: In general, don't use absolute coordinate functions (like turtle.goto(), turtle.xcor(), turtle.ycor(),
 # turtle.setheading()) in your draw functions because they might not work when the heading angle is not 0.
 
 def drawSquare(size, extraData=None):
-    # Move to the top-right corner before drawing:
+    """Draw a square where `size` is the length of each side."""
+
+    # Move the turtle to the top-right corner before drawing:
     turtle.penup()
-    turtle.forward(size // 2)
-    turtle.left(90)
-    turtle.forward(size // 2)
-    turtle.left(180)
+    turtle.forward(size // 2)  # Move to the right edge.
+    turtle.left(90)  # Turn to face upwards.
+    turtle.forward(size // 2)  # Move to the top-right corner.
+    turtle.left(180)  # Turn around to face downwards.
     turtle.pendown()
 
-    # Draw a square:
+    # Draw the four sides of a square:
     for i in range(4):
         turtle.forward(size)
         turtle.right(90)
 
 
 def drawTriangle(size, extraData=None):
-    # Move the turtle into position at the top of the equilateral triangle:
+    """Draw an equilateral triangle where `size` is the length of
+    each side."""
+
+    # Move the turtle to the top of the equilateral triangle:
     height = (size * math.sqrt(3)) / 2
     turtle.penup()
-    turtle.left(90)
-    turtle.forward(height * (2/3))
-    turtle.right(150)
+    turtle.left(90)  # Turn to face upwards.
+    turtle.forward(height * (2/3))  # Move to the top corner.
+    turtle.right(150)  # Turn to face the bottom-right corner.
     turtle.pendown()
 
-    # Draw the triangle:
-    turtle.forward(size)
-    turtle.right(120)
-    turtle.forward(size)
-    turtle.right(120)
-    turtle.forward(size)
-    turtle.right(120)
+    # Draw the three sides of the triangle:
+    for i in range(3):
+        turtle.forward(size)
+        turtle.right(120)
 
 
 def drawFilledSquare(size, extraData=None):
-    # Move to the top-right corner before drawing:
+    """Draw a solid, filled-in square where `size` is the length of each
+    side. The extraData dictionary can have a key 'colors' whose value
+    is a list of "color strings" that the turtle module recognizes, e.g.
+    'red', 'black', etc. The first color string in the list is used
+    for the first iteration, the second for the second, and so on. When
+    you run out of colors for later iterations, the first color is used
+    again."""
+
+    # Move the turtle to the top-right corner before drawing:
     turtle.penup()
-    turtle.forward(size // 2)
-    turtle.left(90)
-    turtle.forward(size // 2)
-    turtle.left(180)
+    turtle.forward(size // 2)  # Move to the right edge.
+    turtle.left(90)  # Turn to face upwards.
+    turtle.forward(size // 2)  # Move to the top-right corner.
+    turtle.left(180)  # Turn around to face downwards.
     turtle.pendown()
 
     # The extra data is a tuple of (fillcolor, pencolor) values:
@@ -63,7 +73,7 @@ def drawFilledSquare(size, extraData=None):
         turtle.fillcolor(extraData['colors'][iteration % len(extraData['colors'])])
         turtle.pencolor(extraData['colors'][iteration % len(extraData['colors'])])
 
-    # Draw a square:
+    # Draw the four sides of a square:
     turtle.begin_fill()
     for i in range(4):
         turtle.forward(size)
@@ -92,24 +102,26 @@ def drawFilledDiamond(size, extraData=None):
     turtle.end_fill()
 
 
-def drosteDraw(drawFunction, size, changes, extraData=None):
-    # NOTE: The heading of the turtle is considered to be the rightward direction.
+def drosteDraw(drawFunction, size, recursiveDrawings, extraData=None):
+    # NOTE: The current heading of the turtle is considered to be the
+    # rightward or positive-x direction.
 
-    # Provide default values for extraData if they weren't provided by the caller:
+    # Provide default values for extraData:
     if extraData is None:
         extraData = {}
     if '_iteration' not in extraData:
-        extraData['_iteration'] = 1
-    if 'maxIteration' not in extraData:
-        extraData['maxIteration'] = MAX_ITERATION
-    if 'maxFunctionCalls' not in extraData:
-        extraData['maxFunctionCalls'] = MAX_FUNCTION_CALLS
-    if 'minSize' not in extraData:
-        extraData['minSize'] = MIN_SIZE
+        extraData['_iteration'] = 1  # The first iteration is 1, not 0.
+    if '_maxIteration' not in extraData:
+        extraData['_maxIteration'] = MAX_ITERATION
+    if '_maxFunctionCalls' not in extraData:
+        extraData['_maxFunctionCalls'] = MAX_FUNCTION_CALLS
+    if '_minSize' not in extraData:
+        extraData['_minSize'] = MIN_SIZE
 
-    if extraData['_iteration'] > extraData['maxIteration'] or \
-       len(changes) ** extraData['_iteration'] > extraData['maxFunctionCalls'] or \
-       size < extraData['minSize']:
+    requiredNumCalls = len(recursiveDrawings) ** extraData['_iteration']
+    if extraData['_iteration'] > extraData['_maxIteration'] or \
+       requiredNumCalls > extraData['_maxFunctionCalls'] or \
+       size < extraData['_minSize']:
         return  # BASE CASE
 
     # Remember the original starting coordinates and heading.
@@ -122,32 +134,35 @@ def drosteDraw(drawFunction, size, changes, extraData=None):
     turtle.penup()
 
     # RECURSIVE CASE
-    for i in range(len(changes)):
-        # Provide default values for the dictionaries in `changes`:
-        if 'x' not in changes[i]:
-            changes[i]['x'] = 0
-        if 'y' not in changes[i]:
-            changes[i]['y'] = 0
-        if 'size' not in changes[i]:
-            changes[i]['size'] = 1.0
-        if 'angle' not in changes[i]:
-            changes[i]['angle'] = 0
+    # Do each of the recursive drawings:
+    for i, recursiveDrawing in enumerate(recursiveDrawings):
+        # Provide default values for the recursiveDrawing dictionary:
+        if 'x' not in recursiveDrawing:
+            recursiveDrawing['x'] = 0
+        if 'y' not in recursiveDrawing:
+            recursiveDrawing['y'] = 0
+        if 'size' not in recursiveDrawing:
+            recursiveDrawing['size'] = 1.0
+        if 'angle' not in recursiveDrawing:
+            recursiveDrawing['angle'] = 0
 
-        #turtle.goto(origX + (size * changes[i]['x']), origY + (size * changes[i]['y']))
+        # Move the turtle into position for the next recursive drawing:
         turtle.goto(origX, origY)
-        turtle.setheading(origHeading + changes[i]['angle'])
-        turtle.forward(size * changes[i]['x'])
+        turtle.setheading(origHeading + recursiveDrawing['angle'])
+        turtle.forward(size * recursiveDrawing['x'])
         turtle.left(90)
-        turtle.forward(size * changes[i]['y'])
+        turtle.forward(size * recursiveDrawing['y'])
         turtle.right(90)
+        # Increment the iteration count for the next level of recursion:
         extraData['_iteration'] += 1
-        drosteDraw(drawFunction, int(size * changes[i]['size']), changes, extraData)
+        drosteDraw(drawFunction, int(size * recursiveDrawing['size']), recursiveDrawings, extraData)
+        # Decrement the iteration count when done with that recursion:
         extraData['_iteration'] -= 1
 
-    # At the end of the first recursive call to drosteDraw(), call
-    # update() to display any buffered drawings on the screen:
+    # Display any buffered drawing commands on the screen:
     if extraData['_iteration'] == 1:
         turtle.update()
+
 
 _DEMO_NUM = 0
 def demo(x=None, y=None):
